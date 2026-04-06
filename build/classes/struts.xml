@@ -2,9 +2,26 @@
 <!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN" "http://struts.apache.org/dtds/struts-2.3.dtd">
 
 <struts>
-	<package name="llmApi" namespace="/" extends="json-default">
+	<package name="default" namespace="/" extends="json-default">
 		<action name="getResponse" class="com.app.LLMAction" method="ask">
 			<result type="json" />
+		</action>
+		
+		<action name="login" class = "com.app.LoginAction" >
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<action name="updateScore" class="com.app.UpdateScoreAction">
+			<interceptor-ref name="json"/>
+    		<interceptor-ref name="defaultStack"/>
+		    <result name="success" type="json"/>
+		    <result name="error" type="json"/>
+		</action>
+		
+		<action name="leaderboard" class="com.app.LeaderboardAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
 		</action>
 	</package>
 </struts>

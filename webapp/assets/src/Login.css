@@ -1,0 +1,51 @@
+.login {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.login form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    width: 260px;
+}
+
+.login h2{
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+
+}
+
+#login-btn {
+    background-color: black;
+    color: white;
+    padding: 25px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+#login-btn:hover {
+    background-color: #444;
+}
+
+#login-btn:disabled {
+    cursor: not-allowed;
+    background-color: #aaa;
+}
+
+#username {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+#username:hover {
+    border: 1px solid black;
+}

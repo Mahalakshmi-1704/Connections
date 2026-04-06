@@ -1,3 +1,5 @@
+import './Results.css';
+
 function Results({ guessHistory, onBack }) {
   
   return (
