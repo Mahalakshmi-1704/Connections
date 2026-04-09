@@ -5,11 +5,6 @@ import GameOver from './GameOver.jsx';
 import Results from './Results.jsx';
 import './Game.css';
 
-function buildArray(data) {
-  return data.flatMap((group, groupIndex) => group.members.map((member, memberIndex) => 
-                            ({id: groupIndex * group.members.length + memberIndex + ":" + member, value: member, category: group.title, color: group.color})));
-}
-
 function shuffleItems(array) {
   const shuffledArray = [...array];
 
@@ -20,16 +15,19 @@ function shuffleItems(array) {
   return shuffledArray;
 }
 
-function constructGroup(data, order) {
+/*function constructGroup(data, order) {
+
   const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
   
   return shuffle(data).slice(0, order).map(group => ({"title": group.title, 
                                       "members": shuffle(group.members).slice(0, order), 
                                       "color": group.color}));
-}
+}*/
 
-async function getData() {
-  const requestOptions = {method: 'GET', headers: {'Content-Type': 'application/json',}};
+async function getData(order) {
+
+  //console.log("Order : ", order);
+  const requestOptions = {method: 'POST', headers: {'Content-Type': 'application/json' }, body: JSON.stringify({order: order})};
   
   const response = await fetch("/connectionGame/getResponse.action", requestOptions);
   if (!response.ok) {
@@ -38,19 +36,18 @@ async function getData() {
   }
 
   const resp = await response.json();
-  const categories = JSON.parse(resp.llmResponse);
-  return categories;
+  
+  //console.log("Items fetched in getData : ",resp.items);
+  return resp.items;
 }
 
 export default function Game({ currentUser, onScoreChange }) {
 
   const [order, setOrder] = useState(4);
-  const [categories, setCategories] = useState([]);
-  const [groups, setGroups] = useState([]);
   const [items, setItems] = useState([]);
   const [correctGroups, setCorrectGroups] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [lives, setLives] = useState(4);
+  const [lives, setLives] = useState(order);
   const [gameOver, setGameOver] = useState(false);
   const [oneAway, setOneAway] = useState(false);
   const [showResults, setShowResults] = useState(false);
@@ -60,17 +57,14 @@ export default function Game({ currentUser, onScoreChange }) {
 
   async function loadData() {
     setLoading(true);
-    const category = await getData();
-    if (category) {
-      setCategories(category);
-      const constructed = constructGroup(category, order);
-      setGroups(constructed);
-      setItems(() => shuffleItems(buildArray(constructed)));
+    const items = await getData(order);
+    if (items) {
+      setItems(shuffleItems(items));
     }
     setLoading(false);
   }
 
-  useEffect(() => { loadData() },[]);
+  useEffect(() => { loadData() }, [order]);
 
   useEffect(() => {
     if (!oneAway) return ;
@@ -83,9 +77,7 @@ export default function Game({ currentUser, onScoreChange }) {
     if (gameOver) updateScore();
   }, [gameOver]);
 
-  console.log("Categories : ", categories);
-  console.log("Groups : ", groups);
-  console.log("Items : ", items);
+  //console.log("Items : ", items);
  
   function handleShuffle() {
     setItems(prev => shuffleItems(prev));
@@ -97,11 +89,8 @@ export default function Game({ currentUser, onScoreChange }) {
 
   function handleOrderChange(e) {
     const newOrder = Number(e.target.value);
-    const constructed = constructGroup(categories, newOrder);
     setSelectedItems([]);
     setCorrectGroups([]);
-    setGroups(constructed);
-    setItems(shuffleItems(buildArray(constructed)));
     setLives(newOrder);
     setOrder(newOrder);
     setGameOver(false);
@@ -109,51 +98,77 @@ export default function Game({ currentUser, onScoreChange }) {
     guessHistoryRef.current = [];
   }
 
-  function handleSubmit() {
-    let count = {};
-    for (let i of selectedItems) {
-      count[i.category] = (i.category in count)? count[i.category] + 1 : 1;
-    }
-    
-    let maxCount = Math.max(...Object.values(count));
-    //console.log(maxCount);
+  async function handleSubmit() {
+    let correct = false;
+
+    const data = {selectedList: selectedItems.map(i => i.value)};
+    //console.log("Selected Items :",data);
+
     guessHistoryRef.current.push(selectedItems.map(s => s.color));
-    
-    if (maxCount === order) {
-      const newCorrectGroups = [...correctGroups, groups.find(g => g.title === selectedItems[0].category)];
-      setCorrectGroups(newCorrectGroups);
 
-      setItems(prev => prev.filter(i => i.category !== selectedItems[0].category));
-
-      setSelectedItems([]);
-      /*if (groups.length - newCorrectGroups.length === 1) {
-        const remGroup = groups.find(g => !newCorrectGroups.some(c => c.title === g.title));
-
-        setTimeout(() => {
-          setCorrectGroups([...newCorrectGroups, remGroup]);
-          setItems([]);
-          setGameOver(true);
-        }, 500); 
-        setGameOver(true);
-      }*/  
-     if (correctGroups.length === (order - 1)) setGameOver(true);
-
-    } else {
-      const newLives = lives - 1;
-      setLives(newLives);
-      setOneAway(maxCount === order - 1 && order != 2);
-      handleDeselectAll();
-
-      if (newLives === 0) {
-        const unsolvedGroups = groups.filter(g => !correctGroups.some(c => c.title === g.title));
-        
-        unsolvedGroups.forEach((group, i) => { setTimeout(() => {
-            setCorrectGroups(prev => [...prev, group]);
-            setItems(prev => prev.filter(g => g.category !== group.title));
-          }, 500 + i * 200);
-        })
-        setGameOver(true);
+    try {
+      const requestOptions = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)};
+      const response = await fetch("/connectionGame/checkGroup.action", requestOptions);
+      if (!response.ok) {
+        console.log(response.status);
+        return;
       }
+
+      const resp = await response.json();
+
+      //console.log("Correct : ", resp.isCorrect);
+      //console.log("oneAway : ", resp.oneAway);
+
+      correct = resp.isCorrect;
+      setOneAway(resp.oneAway);
+
+      if (correct) {        
+        //console.log("Correct Group");
+        //console.log("Title : ",resp.group.title);
+        //console.log("Members : ", resp.group.members);
+
+        const newCorrectGroups = [...correctGroups, resp.group];
+        selectedItems.forEach(s => setItems(prev => prev.filter(i => i.value !== s.value)));
+        setCorrectGroups(newCorrectGroups);
+        setSelectedItems([]);
+        if (correctGroups.length === (order - 1)) setGameOver(true);
+
+      } else {
+        const newLives = lives - 1;
+        setLives(newLives);
+        handleDeselectAll();
+
+        if (newLives === 0) {
+          try {
+            const requestOptions = { method: 'GET', headers: {'Content-Type': 'application/json' },};
+            const groupResp = await fetch("/connectionGame/revealGroup.action", requestOptions);
+            if (!groupResp.ok) {
+              console.log(groupResp.status);
+              return;
+            }
+
+            const res = await groupResp.json();
+            let groups = res.groups;
+            for (const solved of correctGroups) {
+              groups = groups.filter(g => g.title !== solved.title);
+            }
+
+            //console.log("Unsolved groups : ", groups);
+            groups.forEach((group, i) => { setTimeout(() => {
+                setCorrectGroups(prev => [...prev, group]);
+                //setItems(prev => prev.filter(g => g.category !== group.title));
+                group.members.forEach(member => setItems(prev => prev.filter(g => g.value !== member)));
+              }, 500 + i * 200);
+            })
+            setGameOver(true);
+          } catch(e) {
+            console.log("Error in fetching unsolved Groups : ", e);
+          }
+        }
+      }
+
+    } catch(err) {
+      console.log("Error : ", err);
     }
   }
 
@@ -168,15 +183,11 @@ export default function Game({ currentUser, onScoreChange }) {
 
   function handleRestart() {
     loadData();
-    const newGroups = constructGroup(categories, 4);
-    setGroups(newGroups);
-    setItems(shuffleItems(buildArray(newGroups)));
     setSelectedItems([]);
     setCorrectGroups([]);
-    setLives(4);
+    setLives(order);
     setGameOver(false);
     setShowResults(false);
-    setOrder(4);
     guessHistoryRef.current = [];
   }
 
@@ -193,24 +204,18 @@ export default function Game({ currentUser, onScoreChange }) {
       }
 
       const resp = await response.json();
-      const returnedUsername = resp.username;
-      const updatedScore = resp.score;
-
       onScoreChange(newScore);
-
-      //console.log("After updating score : ", returnedUsername, updatedScore);
     } catch(err) {
       console.log("Error : ", err);
     }
   }
 
-  console.log("score : ", currentUser.score);
+  //console.log("score : ", currentUser.score);
 
   if (loading) return <div>Loading...</div>
 
   return (
     <div className="game-container">
-
       <div className="player-info">
         <p><b>{currentUser.username}</b><br />Score : {currentUser.score}</p>
       </div>
@@ -260,3 +265,4 @@ export default function Game({ currentUser, onScoreChange }) {
     </div>
   );
 }
+

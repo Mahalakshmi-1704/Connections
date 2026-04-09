@@ -5,7 +5,6 @@ import './Leaderboard.css';
 export default function Leaderboard({ currentUser }) {
     const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
-    //const [error, setError] = useState(null);
     const navigate = useNavigate();
 
 
@@ -15,12 +14,12 @@ export default function Leaderboard({ currentUser }) {
             if (!response.ok) { console.log(response.status); return;}
             const resp = await response.json();
 
-            console.log(resp.leaderboard);
+            //console.log(resp.leaderboard);
 
             setLeaderboard(resp.leaderboard);
             setLoading(false);
         } catch (err) {
-            setError("Failed to load leaderboard.");
+            console.log("Failed to load leaderboard.");
         } finally {
             setLoading(false);
         }
@@ -29,8 +28,6 @@ export default function Leaderboard({ currentUser }) {
     useEffect(() => {
         fetchLeaderboard();
     }, []);
-
-    //className={user.username === currentUser ? 'highlight-row' : ''}
 
     if (loading) return <div className="leaderboard-container">Loading...</div>;
 

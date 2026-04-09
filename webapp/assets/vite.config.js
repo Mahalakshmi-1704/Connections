@@ -11,7 +11,4 @@ export default defineConfig({
     }),
   ],
   base: "/connectionGame/",
-  /*build: {
-    outDir: '/Users/maha-nts0448/eclipse-workspace/connectionGame/webapp'
-  }*/
 })

@@ -1,17 +1,9 @@
 package com.app;
 
 public class User {
-	//private int id;
+	
 	private String username;
 	private int score;
-	
-	/*public int getId() {
-		return id;
-	}
-	
-	public void setId(int id) {
-		this.id = id;
-	}*/
 	
 	public User() {}
 

@@ -9,13 +9,7 @@ public class UpdateScoreAction extends ActionSupport {
 	
 	public String execute() {
 		try {
-	        System.out.println("Username: " + username);
-	        System.out.println("Score: " + score);
-		
 			updateScoreDao.updateScore(username, score);
-			
-			//System.out.println(username);
-			//System.out.println(score);
 			return SUCCESS;
 		} catch(Exception e) {
 			e.printStackTrace();

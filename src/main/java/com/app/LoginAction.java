@@ -10,10 +10,8 @@ public class LoginAction extends ActionSupport {
 
     public String execute() {
         try {
-        	//System.out.println("Received : "+ username);
             user = userDao.getUser(username);
-            //System.out.println(user.getUsername());
-            //System.out.println(user.getScore());
+            
             return SUCCESS;
         } catch (Exception e) {
             addActionError("Error: " + e.getMessage());

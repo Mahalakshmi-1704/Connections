@@ -15,6 +15,7 @@ public class UpdateScoreDAO {
 				PreparedStatement ps = conn.prepareStatement("UPDATE users SET score = ? WHERE username = ?")) {
 			ps.setInt(1, score);
 			ps.setString(2, username);
+			//ps.executeUpdate();
 			
 			if (ps.executeUpdate() == 0) {
 				System.out.println("score not updated");

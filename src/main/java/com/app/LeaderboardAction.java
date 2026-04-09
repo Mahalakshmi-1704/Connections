@@ -11,9 +11,6 @@ public class LeaderboardAction extends ActionSupport {
 		try {
 			leaderboard = leaderboardDao.fetchLeaderboard();
 			
-			//System.out.println("Leaderboard from Action class");
-			//leaderboard.forEach(u -> System.out.println(u.getUsername() + " " + u.getScore()));
-			
 			return SUCCESS;
 		} catch(Exception e) {
 			e.printStackTrace();

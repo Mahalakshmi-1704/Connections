@@ -3,8 +3,9 @@
 
 <struts>
 	<package name="default" namespace="/" extends="json-default">
-		<action name="getResponse" class="com.app.LLMAction" method="ask">
-			<result type="json" />
+		<action name="getResponse" class="com.app.LLMAction">
+			<interceptor-ref name="json"/>
+			<result name="success" type="json" />
 		</action>
 		
 		<action name="login" class = "com.app.LoginAction" >
@@ -14,7 +15,6 @@
 		
 		<action name="updateScore" class="com.app.UpdateScoreAction">
 			<interceptor-ref name="json"/>
-    		<interceptor-ref name="defaultStack"/>
 		    <result name="success" type="json"/>
 		    <result name="error" type="json"/>
 		</action>
@@ -22,6 +22,16 @@
 		<action name="leaderboard" class="com.app.LeaderboardAction">
 			<result name="success" type="json" />
 			<result name="error" type="json" />
+		</action>
+		
+		<action name="checkGroup" class="com.app.CheckGroup" method="checkGroup">
+			<interceptor-ref name="json" />
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<action name="revealGroup" class="com.app.RevealGroups">
+			<result type="json" />
 		</action>
 	</package>
 </struts>
